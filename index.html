@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VerbaMundo — Master Spanish</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0e0e10;
+      --surface: #18181c;
+      --surface2: #22222a;
+      --border: #2e2e38;
+      --accent: #e8a838;
+      --accent2: #c8474a;
+      --accent3: #4a9e8a;
+      --text: #f0ede8;
+      --muted: #8a8898;
+      --success: #5cb85c;
+      --danger: #e05252;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 100;
+    }
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .logo span { color: var(--text); font-style: italic; }
+    .nav-score {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 1rem;
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem 3rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+    .stats-row {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.8rem;
+      color: var(--accent);
+      display: block;
+    }
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* GAME GRID */
+    .games-section { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .game-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .game-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      background: var(--surface2);
+    }
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--accent));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .game-card:hover::before { opacity: 1; }
+    .card-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .card-title {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.35rem;
+    }
+    .card-desc {
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+    .card-meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .badge.timed { border-color: var(--accent); color: var(--accent); }
+    .badge.story { border-color: var(--accent3); color: var(--accent3); }
+    .badge.verb { border-color: var(--accent2); color: var(--accent2); }
+
+    /* MODAL OVERLAY */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 200;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-y: auto;
+      padding: 2rem 1rem;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 700px;
+      padding: 2rem;
+      position: relative;
+      margin: auto;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .modal-close:hover { background: var(--border); }
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+    }
+    .modal-subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* TIMER BAR */
+    .timer-wrap {
+      margin-bottom: 1.5rem;
+    }
+    .timer-bar {
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .timer-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width 1s linear, background 0.5s;
+    }
+    .timer-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--accent);
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+
+    /* INPUT AREA */
+    .game-input-wrap {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .game-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .game-input:focus { border-color: var(--accent); }
+    .game-input.correct { border-color: var(--success); background: rgba(92,184,92,0.08); }
+    .game-input.wrong { border-color: var(--danger); background: rgba(224,82,82,0.08); animation: shake 0.3s; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .btn {
+      background: var(--accent);
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn.secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn.secondary:hover { border-color: var(--accent); }
+    .btn.danger { background: var(--danger); color: #fff; }
+
+    /* WORD PILE */
+    .word-pile {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      min-height: 80px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .word-chip {
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.85rem;
+      color: var(--accent);
+      animation: popIn 0.2s;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* SCORE DISPLAY */
+    .score-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.4rem;
+      color: var(--accent);
+      text-align: center;
+      margin: 0.5rem 0;
+    }
+
+    /* RESULT SCREEN */
+    .result-screen {
+      text-align: center;
+      padding: 1rem 0;
+    }
+    .result-screen h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .result-screen p { color: var(--muted); margin-bottom: 1.5rem; }
+    .result-words {
+      text-align: left;
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: var(--text);
+    }
+    .missed-words { color: var(--accent2); }
+
+    /* MULTIPLE CHOICE */
+    .choices-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .choice-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.95rem;
+      text-align: left;
+      transition: border-color 0.15s, background 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .choice-btn:hover { border-color: var(--accent); }
+    .choice-btn.correct-choice { border-color: var(--success); background: rgba(92,184,92,0.15); color: var(--success); }
+    .choice-btn.wrong-choice { border-color: var(--danger); background: rgba(224,82,82,0.1); color: var(--danger); }
+
+    /* STORY TEXT */
+    .story-text {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      line-height: 1.9;
+      font-size: 0.95rem;
+      margin-bottom: 1.25rem;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .story-blank {
+      display: inline-block;
+      border-bottom: 2px solid var(--accent);
+      min-width: 80px;
+      color: transparent;
+      background: rgba(232,168,56,0.12);
+      border-radius: 4px;
+      padding: 0 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .story-blank.filled { color: var(--accent); cursor: default; }
+    .story-blank.wrong-blank { border-color: var(--danger); background: rgba(224,82,82,0.1); }
+
+    /* FLASHCARD */
+    .flashcard {
+      perspective: 1000px;
+      margin: 1rem auto;
+      width: 100%;
+      max-width: 400px;
+      height: 200px;
+      cursor: pointer;
+    }
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.5s;
+    }
+    .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+    .flashcard-front, .flashcard-back {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      backface-visibility: hidden;
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+    }
+    .flashcard-front {
+      background: var(--surface2);
+    }
+    .flashcard-back {
+      background: var(--surface2);
+      transform: rotateY(180deg);
+      border-color: var(--accent);
+    }
+    .card-word {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--text);
+    }
+    .card-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+    .card-translation {
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .card-example {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+      font-style: italic;
+    }
+
+    /* PROGRESS */
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .progress-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent3);
+      border-radius: 999px;
+      transition: width 0.4s;
+    }
+    .progress-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* WORD SCRAMBLE */
+    .letters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+    .letter-tile {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      user-select: none;
+    }
+    .letter-tile:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .letter-tile.used { opacity: 0.3; cursor: default; transform: none; }
+    .answer-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      min-height: 52px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .answer-tile {
+      background: rgba(232,168,56,0.12);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--accent);
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    /* HANGING MAN */
+    .hangman-svg { display: block; margin: 0 auto 1rem; }
+    .hangman-word {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .hangman-letter {
+      width: 36px;
+      text-align: center;
+      border-bottom: 2px solid var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.4rem;
+      color: var(--accent);
+      padding-bottom: 0.2rem;
+    }
+    .keyboard-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+    }
+    .key-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4rem 0.7rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      transition: background 0.1s;
+      min-width: 34px;
+    }
+    .key-btn:hover:not(:disabled) { border-color: var(--accent); }
+    .key-btn:disabled { opacity: 0.3; cursor: default; }
+    .key-btn.hit { background: rgba(92,184,92,0.2); border-color: var(--success); color: var(--success); }
+    .key-btn.miss { background: rgba(224,82,82,0.1); border-color: var(--danger); color: var(--danger); }
+
+    /* CONJUGATION TABLE */
+    .conj-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.9rem; }
+    .conj-table th { background: var(--surface2); color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.6rem 0.75rem; border: 1px solid var(--border); text-align: left; }
+    .conj-table td { padding: 0.6rem 0.75rem; border: 1px solid var(--border); }
+    .conj-input {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      width: 100%;
+    }
+    .conj-cell.correct-cell { background: rgba(92,184,92,0.1); }
+    .conj-cell.wrong-cell { background: rgba(224,82,82,0.1); }
+
+    /* SPEED TRANSLATE */
+    .big-word {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      color: var(--text);
+      text-align: center;
+      margin: 1rem 0;
+      line-height: 1.2;
+    }
+    .streak-display {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .streak-display span { color: var(--accent); font-size: 1.1rem; }
+
+    /* NOTIFICATION */
+    .notif {
+      position: fixed;
+      top: 5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      color: var(--text);
+      z-index: 500;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .notif.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .notif.success { border-color: var(--success); color: var(--success); }
+    .notif.error { border-color: var(--danger); color: var(--danger); }
+
+    /* MISC UTIL */
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+    .mt1 { margin-top: 0.75rem; }
+    .mt2 { margin-top: 1.5rem; }
+    .gap { display: flex; gap: 0.75rem; }
+    .hint-text { font-size: 0.82rem; color: var(--muted); font-style: italic; }
+    .question-text {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+    .lives-row { display: flex; gap: 0.35rem; font-size: 1.3rem; }
+
+    @media (max-width: 540px) {
+      .choices-grid { grid-template-columns: 1fr; }
+      .modal { padding: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Verba<span>Mundo</span></div>
+  <div class="nav-score" id="globalScore">⭐ 0 pts</div>
+</nav>
+
+<div class="hero">
+  <h1>Master <em>15,000</em> Spanish Verbs Through Play</h1>
+  <p>Ten interactive games built around real vocabulary — timed sprints, story immersion, conjugation drills, and more. Every round is different.</p>
+  <div class="stats-row">
+    <div class="stat"><span class="stat-num" id="statPlayed">0</span><span class="stat-label">Games Played</span></div>
+    <div class="stat"><span class="stat-num" id="statWords">0</span><span class="stat-label">Words Learned</span></div>
+    <div class="stat"><span class="stat-num" id="statStreak">0</span><span class="stat-label">Best Streak</span></div>
+  </div>
+</div>
+
+<div class="games-section">
+  <div class="section-label">Choose a game — every round draws fresh words</div>
+  <div class="games-grid" id="gamesGrid"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal" id="modalContent">
+    <button class="modal-close" onclick="closeModal()">✕ Close</button>
+    <div id="gameArea"></div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script src="data.js"></script>
+<script src="games.js"></script>
+</body>
+</html>
