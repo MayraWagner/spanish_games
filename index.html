@@ -123,6 +123,10 @@
       border-radius: 12px;
       padding: 1.5rem;
       cursor: pointer;
+      width: 100%;
+      color: inherit;
+      font: inherit;
+      text-align: left;
       transition: border-color 0.2s, transform 0.15s, background 0.2s;
       position: relative;
       overflow: hidden;
@@ -667,10 +671,10 @@
 
 <div class="hero">
   <h1>Master <em>15,000</em> Spanish Verbs Through Play</h1>
-  <p>Ten interactive games built around real vocabulary — timed sprints, story immersion, conjugation drills, and more. Every round is different.</p>
+  <p>Fifteen interactive games built around real vocabulary, Spanish culture, geography, history, and music. Every round is different.</p>
   <div class="stats-row">
     <div class="stat"><span class="stat-num" id="statPlayed">0</span><span class="stat-label">Games Played</span></div>
-    <div class="stat"><span class="stat-num" id="statWords">0</span><span class="stat-label">Words Learned</span></div>
+    <div class="stat"><span class="stat-num" id="statWords">0</span><span class="stat-label">Correct Answers</span></div>
     <div class="stat"><span class="stat-num" id="statStreak">0</span><span class="stat-label">Best Streak</span></div>
   </div>
 </div>
@@ -682,8 +686,8 @@
 
 <!-- MODAL -->
 <div class="modal-overlay hidden" id="modalOverlay">
-  <div class="modal" id="modalContent">
-    <button class="modal-close" onclick="closeModal()">✕ Close</button>
+  <div class="modal" id="modalContent" role="dialog" aria-modal="true" aria-label="Game">
+    <button class="modal-close" onclick="closeModal()" aria-label="Close game">✕ Close</button>
     <div id="gameArea"></div>
   </div>
 </div>

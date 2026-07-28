@@ -11,6 +11,23 @@ let currentStreak = 0;
 let gameTimer = null;
 let gameActive = false;
 
+// Make themed conversation vocabulary available across the existing translation,
+// flashcard, sprint, and true/false games.
+const themedEntries = Object.entries(DATA.themedVocabulary || {}).flatMap(([theme, words]) =>
+  words.map(word => ({...word, theme}))
+);
+themedEntries.forEach(word => {
+  if (!DATA.wordPairs.some(pair => pair.en === word.en && pair.es === word.es)) {
+    DATA.wordPairs.push({en:word.en, es:word.es, theme:word.theme, type:word.type, subtopic:word.subtopic});
+  }
+  if (word.type === 'verb' && !word.es.includes(' ') && !DATA.verbs.some(verb => verb.es === word.es)) {
+    DATA.verbs.push({
+      es:word.es, en:word.en, cat:word.theme,
+      ex:`Usamos «${word.es}» en una conversación sobre ${word.theme}.`
+    });
+  }
+});
+
 // ─── GAME CATALOG ─────────────────────────────────────
 const GAMES = [
   {
@@ -89,7 +106,7 @@ const GAMES = [
     id: 'category_sort',
     icon: '📂',
     title: 'Category Sort',
-    desc: 'Words pour in — drag them into the right Spanish category buckets. Movement, Emotion, Communication…',
+    desc: 'Choose the right semantic category for each verb: Movement, Emotion, Communication, and more.',
     badges: ['sorting','vocab'],
     accentColor: '#7c6aeb',
     launch: launchCategorySort
@@ -112,6 +129,42 @@ const GAMES = [
     accentColor: '#c8474a',
     launch: launchTrueFalse
   },
+  {
+    id: 'pop_culture',
+    icon: '📺',
+    title: 'Pop Culture Spotlight',
+    desc: 'Meet famous Spanish television personalities, actors, shows, and cultural icons through fast knowledge questions.',
+    badges: ['culture','quiz'],
+    accentColor: '#7c6aeb',
+    launch: () => launchKnowledgeQuiz('popCulture')
+  },
+  {
+    id: 'geography',
+    icon: '🗺️',
+    title: 'Spain Explorer',
+    desc: 'Train Spain’s cities, autonomous communities, landmarks, islands, rivers, and regional geography.',
+    badges: ['geography','quiz'],
+    accentColor: '#4a9e8a',
+    launch: () => launchKnowledgeQuiz('geography')
+  },
+  {
+    id: 'politics_history',
+    icon: '🏛️',
+    title: 'Politics & History',
+    desc: 'Combine civic and historical knowledge with the Spanish vocabulary used to discuss institutions and events.',
+    badges: ['history','vocab'],
+    accentColor: '#e8a838',
+    launch: () => launchKnowledgeQuiz('politicsHistory')
+  },
+  {
+    id: 'music_cloze',
+    icon: '🎵',
+    title: 'Spanish Music Cloze',
+    desc: 'Complete changing vocabulary blanks in original learning passages inspired by 20 landmark songs from Spain.',
+    badges: ['music','grammar'],
+    accentColor: '#c8474a',
+    launch: launchMusicCloze
+  },
 ];
 
 // ─── BOOT ─────────────────────────────────────────────
@@ -124,14 +177,14 @@ window.addEventListener('DOMContentLoaded', () => {
 function renderGameGrid() {
   const grid = document.getElementById('gamesGrid');
   grid.innerHTML = GAMES.map(g => `
-    <div class="game-card" style="--card-accent:${g.accentColor}" onclick="GAMES.find(x=>x.id==='${g.id}').launch()">
+    <button type="button" class="game-card" style="--card-accent:${g.accentColor}" onclick="GAMES.find(x=>x.id==='${g.id}').launch()" aria-label="Play ${g.title}">
       <div class="card-icon">${g.icon}</div>
       <div class="card-title">${g.title}</div>
       <div class="card-desc">${g.desc}</div>
       <div class="card-meta">
         ${g.badges.map(b => `<span class="badge ${b==='timed'?'timed':b==='story'||b==='vocab'?'story':b==='verb'||b==='verbs'?'verb':''}">${b}</span>`).join('')}
       </div>
-    </div>
+    </button>
   `).join('');
 }
 
@@ -139,6 +192,7 @@ function renderGameGrid() {
 function openModal(html) {
   document.getElementById('gameArea').innerHTML = html;
   document.getElementById('modalOverlay').classList.remove('hidden');
+  setTimeout(() => document.querySelector('#modalContent input, #modalContent button')?.focus(), 0);
 }
 
 function closeModal() {
@@ -298,7 +352,6 @@ function blitzEnd(found, cat, validWords) {
   gameActive = false;
   const missed = DATA.food[cat].filter(w => !found.includes(normalizeSpanish(w)));
   const pts = found.length * 10;
-  addScore(pts);
   addWordsLearned(found.length);
   document.getElementById('gameArea').innerHTML = `
     <div class="result-screen">
@@ -319,9 +372,40 @@ function blitzEnd(found, cat, validWords) {
 // ─── GAME 2: SPEED TRANSLATE ──────────────────────────
 let stState = {};
 
-function launchSpeedTranslate() {
-  const pool = shuffle(DATA.wordPairs);
-  stState = { pool, idx: 0, score: 0, streak: 0, lives: 3, total: 20 };
+function launchSpeedTranslate(theme) {
+  if (!theme) {
+    openModal(`
+      <div class="modal-title">⚡ Speed Translate</div>
+      <div class="modal-subtitle">Choose a conversation theme or practise the complete vocabulary bank.</div>
+      <div class="choices-grid">
+        <button class="choice-btn" onclick="launchSpeedTranslate('gymMenu')">🏋️ Gym vocabulary</button>
+        <button class="choice-btn" onclick="launchSpeedTranslate('boardGames')">🎲 Board-game conversations</button>
+        <button class="choice-btn" onclick="launchSpeedTranslate('love')">💛 Love & relationships</button>
+        <button class="choice-btn" onclick="launchSpeedTranslate('mixed')">🌍 Mixed vocabulary</button>
+      </div>`);
+    return;
+  }
+  if (theme === 'gymMenu') {
+    openModal(`
+      <div class="modal-title">🏋️ Advanced Gym Spanish</div>
+      <div class="modal-subtitle">Choose a focused vocabulary set or mix the complete gym bank.</div>
+      <div class="choices-grid">
+        <button class="choice-btn" onclick="launchSpeedTranslate('gym')">Mixed gym vocabulary</button>
+        <button class="choice-btn" onclick="launchSpeedTranslate('gym_equipment')">Machines & equipment</button>
+        <button class="choice-btn" onclick="launchSpeedTranslate('gym_facilities')">Areas & facilities</button>
+        <button class="choice-btn" onclick="launchSpeedTranslate('gym_anatomy')">Muscles, aches & recovery</button>
+        <button class="choice-btn" onclick="launchSpeedTranslate('gym_training')">Exercises & programming</button>
+        <button class="choice-btn" onclick="launchSpeedTranslate('gym_technique')">Technique & positioning</button>
+        <button class="choice-btn" onclick="launchSpeedTranslate('gym_conversation')">Real gym conversations</button>
+      </div>`);
+    return;
+  }
+  const gymSubtopic = theme.startsWith('gym_') ? theme.slice(4) : null;
+  const source = theme === 'mixed' ? DATA.wordPairs :
+    gymSubtopic ? DATA.wordPairs.filter(pair => pair.theme === 'gym' && pair.subtopic === gymSubtopic) :
+    DATA.wordPairs.filter(pair => pair.theme === theme);
+  const pool = shuffle(source);
+  stState = { pool, theme, idx: 0, score: 0, streak: 0, lives: 3, total: Math.min(20, pool.length) };
   bumpPlayed();
   openModal(`
     <div class="modal-title">⚡ Speed Translate</div>
@@ -370,11 +454,12 @@ function stNext() {
     const val = normalizeSpanish(document.getElementById('stInput').value);
     const correct = normalizeSpanish(pair.es);
     if (val === correct || correct.includes(val) && val.length > 3) {
-      stState.score += 10 + stState.streak * 2;
+      const earned = 10 + stState.streak * 2;
+      stState.score += earned;
       stState.streak++;
       incStreak();
-      addScore(10 + stState.streak * 2);
-      showNotif(`✓ Correct! +${10 + (stState.streak - 1) * 2}`, 'success');
+      addScore(earned);
+      showNotif(`✓ Correct! +${earned}`, 'success');
     } else {
       showNotif(`✗ It was: ${pair.es}`, 'error');
       stState.lives--;
@@ -394,7 +479,7 @@ function stEnd() {
       <p>You translated <strong style="color:var(--accent)">${Math.min(stState.idx, stState.total)}</strong> words.</p>
       <div class="score-display">+${stState.score} pts</div>
       <div class="gap mt2">
-        <button class="btn" onclick="launchSpeedTranslate()">Play Again</button>
+        <button class="btn" onclick="launchSpeedTranslate('${stState.theme}')">Play Again</button>
         <button class="btn secondary" onclick="closeModal()">Menu</button>
       </div>
     </div>`;
@@ -464,6 +549,8 @@ function launchStoryFill() {
 }
 
 function sfCheck() {
+  if (sfState.submitted) return;
+  sfState.submitted = true;
   const story = sfState.story;
   let correct = 0;
   story.blanks.forEach(b => {
@@ -499,7 +586,7 @@ let fcState = {};
 
 function launchFlashcards() {
   const deck = shuffle(DATA.verbs).slice(0, 20);
-  fcState = { deck, idx: 0, correct: 0, flipped: false };
+  fcState = { deck, idx: 0, correct: 0, score: 0, flipped: false };
   bumpPlayed();
   openModal(`<div id="fcArea"></div>`);
   fcRender();
@@ -534,9 +621,9 @@ function fcRender() {
     <div id="fcButtons" style="display:none;margin-top:1rem">
       <p style="text-align:center;color:var(--muted);font-size:0.85rem;margin-bottom:0.75rem">How well did you know it?</p>
       <div class="gap" style="justify-content:center">
-        <button class="btn danger" onclick="fcRate(false)">😕 Missed</button>
-        <button class="btn secondary" onclick="fcRate(true)">🤔 Almost</button>
-        <button class="btn" onclick="fcRate(true)">✅ Got it!</button>
+        <button class="btn danger" onclick="fcRate('missed')">😕 Missed</button>
+        <button class="btn secondary" onclick="fcRate('almost')">🤔 Almost</button>
+        <button class="btn" onclick="fcRate('got')">✅ Got it!</button>
       </div>
     </div>
     <div style="text-align:center;margin-top:0.75rem">
@@ -550,8 +637,9 @@ function fcRender() {
   };
 }
 
-function fcRate(knew) {
-  if (knew) { fcState.correct++; addScore(5); incStreak(); }
+function fcRate(rating) {
+  if (rating === 'got') { fcState.correct++; fcState.score += 5; addScore(5); incStreak(); }
+  else if (rating === 'almost') { fcState.score += 2; addScore(2); resetStreak(); }
   else resetStreak();
   fcState.idx++;
   fcRender();
@@ -563,7 +651,7 @@ function fcEnd() {
     <div class="result-screen">
       <h2>🃏 Deck Complete</h2>
       <p>You knew <strong style="color:var(--accent)">${fcState.correct}</strong> out of ${fcState.deck.length} verbs.</p>
-      <div class="score-display">+${fcState.correct * 5} pts</div>
+      <div class="score-display">+${fcState.score} pts</div>
       <div class="gap mt2">
         <button class="btn" onclick="launchFlashcards()">New Deck</button>
         <button class="btn secondary" onclick="closeModal()">Menu</button>
@@ -615,6 +703,8 @@ function launchConjugationForge() {
 }
 
 function cjCheck() {
+  if (cjState.checked) return;
+  cjState.checked = true;
   const { conj } = cjState;
   const subjects = ['yo','tú','él','nosotros','ellos'];
   let correct = 0;
@@ -758,20 +848,36 @@ window.wsPick = (idx) => {
   if (wsState.usedIndices.includes(idx)) return;
   wsState.selected.push({ letter: wsState.scrambled[idx], srcIdx: idx });
   wsState.usedIndices.push(idx);
-  wsRender();
+  wsUpdateTiles();
 };
 
 window.wsRemove = (selIdx) => {
   const removed = wsState.selected.splice(selIdx, 1)[0];
   wsState.usedIndices = wsState.usedIndices.filter(i => i !== removed.srcIdx);
-  wsRender();
+  wsUpdateTiles();
 };
 
 window.wsClear = () => {
   wsState.selected = [];
   wsState.usedIndices = [];
-  wsRender();
+  wsUpdateTiles();
 };
+
+function wsUpdateTiles() {
+  const answer = document.getElementById('wsAnswer');
+  if (answer) {
+    answer.innerHTML = wsState.selected.map((obj, i) =>
+      `<div class="answer-tile" onclick="wsRemove(${i})">${obj.letter}</div>`).join('');
+  }
+  document.querySelectorAll('.letter-tile').forEach((tile, i) => {
+    tile.classList.toggle('used', wsState.usedIndices.includes(i));
+  });
+}
+
+document.addEventListener('keydown', event => {
+  const overlay = document.getElementById('modalOverlay');
+  if (event.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) closeModal();
+});
 
 window.wsCheck = () => {
   const attempt = wsState.selected.map(o => o.letter).join('');
@@ -973,7 +1079,7 @@ function launchVerbSprint() {
       <button class="btn" onclick="sprintSubmit()">Enter</button>
     </div>
     <div class="word-pile" id="sprintPile"></div>
-    <div class="hint-text">Any verb form ending in -ar, -er, -ir counts!</div>
+    <div class="hint-text">Enter a Spanish infinitive from the learning vocabulary bank.</div>
   `);
 
   const input = document.getElementById('sprintInput');
@@ -990,7 +1096,7 @@ function launchVerbSprint() {
     if (found.includes(norm)) { showNotif('Already got that!', 'error'); return; }
 
     // Check it looks like a verb (-ar/-er/-ir) and is in our dataset or ends in verb suffix
-    const isVerb = validVerbs.includes(norm) || /[aei]r$/.test(norm);
+    const isVerb = validVerbs.includes(norm);
     if (isVerb) {
       found.push(norm);
       const known = DATA.verbs.find(v => normalizeSpanish(v.es) === norm);
@@ -1009,7 +1115,6 @@ function launchVerbSprint() {
 
 function sprintEnd(found) {
   const pts = found.length * 8;
-  addScore(pts);
   addWordsLearned(found.length);
   document.getElementById('gameArea').innerHTML = `
     <div class="result-screen">
@@ -1046,7 +1151,8 @@ function tfNext() {
   if (isTrue) {
     shown = pair.es;
   } else {
-    const other = DATA.wordPairs.find(p => p.es !== pair.es);
+    const alternatives = DATA.wordPairs.filter(p => p.es !== pair.es);
+    const other = alternatives[Math.floor(Math.random() * alternatives.length)];
     shown = other ? other.es : pair.es + 'x';
   }
 
@@ -1105,3 +1211,160 @@ function tfEnd() {
       </div>
     </div>`;
 }
+
+// ─── GAME 12–14: SPAIN KNOWLEDGE QUIZZES ─────────────────────────────
+let kqState = {};
+
+function launchKnowledgeQuiz(topic) {
+  const quiz = DATA.knowledgeQuizzes[topic];
+  kqState = {topic, quiz, pool:shuffle(quiz.questions).slice(0, 10), idx:0, correct:0, score:0, locked:false};
+  bumpPlayed();
+  openModal(`<div id="kqArea"></div>`);
+  kqRender();
+}
+
+function kqRender() {
+  const s = kqState;
+  if (s.idx >= s.pool.length) return kqEnd();
+  const item = s.pool[s.idx];
+  s.locked = false;
+  s.currentChoices = shuffle(item.o);
+  document.getElementById('kqArea').innerHTML = `
+    <div class="flex-between" style="margin-bottom:0.75rem">
+      <div class="modal-title">${s.quiz.title}</div>
+      <div class="progress-text">${s.idx + 1}/${s.pool.length}</div>
+    </button>
+    <div class="progress-row">
+      <div class="progress-bar"><div class="progress-fill" style="width:${(s.idx/s.pool.length)*100}%"></div></div>
+    </div>
+    <div class="question-text">${item.q}</div>
+    <div class="choices-grid" id="kqChoices">
+      ${s.currentChoices.map((option, idx) =>
+        `<button class="choice-btn" onclick="kqAnswer(${idx}, this)">${option}</button>`
+      ).join('')}
+    </div>
+    <div class="hint-text" id="kqExplain">Choose the best answer.</div>`;
+}
+
+window.kqAnswer = (choiceIndex, button) => {
+  if (kqState.locked) return;
+  kqState.locked = true;
+  const item = kqState.pool[kqState.idx];
+  const answer = kqState.currentChoices[choiceIndex];
+  document.querySelectorAll('#kqChoices .choice-btn').forEach(candidate => {
+    candidate.disabled = true;
+    if (candidate.textContent === item.a) candidate.classList.add('correct-choice');
+  });
+  if (answer === item.a) {
+    button.classList.add('correct-choice');
+    kqState.correct++;
+    kqState.score += 15;
+    addScore(15);
+    incStreak();
+  } else {
+    button.classList.add('wrong-choice');
+    resetStreak();
+  }
+  document.getElementById('kqExplain').innerHTML =
+    `<strong>${answer === item.a ? '¡Correcto!' : `Respuesta: ${item.a}`}</strong> ${item.x}`;
+  kqState.idx++;
+  setTimeout(kqRender, 1800);
+};
+
+function kqEnd() {
+  addWordsLearned(kqState.correct);
+  document.getElementById('kqArea').innerHTML = `
+    <div class="result-screen">
+      <h2>${kqState.quiz.title}</h2>
+      <p><strong style="color:var(--accent)">${kqState.correct}/${kqState.pool.length}</strong> correct answers</p>
+      <div class="score-display">+${kqState.score} pts</div>
+      <div class="gap mt2">
+        <button class="btn" onclick="launchKnowledgeQuiz('${kqState.topic}')">New Round</button>
+        <button class="btn secondary" onclick="closeModal()">Menu</button>
+      </div>
+    </div>`;
+}
+
+// ─── GAME 15: SPANISH MUSIC CLOZE ─────────────────────────────────────
+let mcState = {};
+
+const suppliedLyricExtensions = {
+  "LA FAMA": "\nEra algo bien {especial|special}\nMiles de {canciones|songs} en mi mente",
+  "Tití Me Preguntó": "\nHazle caso a tu amiga, ella tiene {razón|is right}\nNo te {enamores|fall in love} de mí",
+  "Bésame Mucho": "\nComo si fuera esta la {noche|night}\nLa última {vez|time}\nPerderte {después|afterwards}\nMirarme en tus {ojos|eyes}\nMuy lejos de {aquí|here}",
+  "Mi Gente": "\nVamos a {romper|break loose}\nApenas {comienza|begins}",
+  "Échame la Culpa": "\nAlgo que {confesar|confess}\nEs mejor dejarlo {así|that way}"
+};
+
+function launchMusicCloze(source) {
+  if (!source) {
+    openModal(`
+      <div class="modal-title">🎵 Spanish Music Cloze</div>
+      <div class="modal-subtitle">Choose the type of music exercise.</div>
+      <div class="choices-grid">
+        <button class="choice-btn" onclick="launchMusicCloze('lyrics')">Your supplied lyrics (${DATA.providedLyrics.length} songs)</button>
+        <button class="choice-btn" onclick="launchMusicCloze('passages')">Original song-inspired passages (${DATA.musicCloze.length} songs)</button>
+        <button class="choice-btn" onclick="launchMusicCloze('mixed')">Mixed collection</button>
+      </div>`);
+    return;
+  }
+  const musicPool = source === 'lyrics' ? DATA.providedLyrics :
+    source === 'passages' ? DATA.musicCloze :
+    [...(DATA.providedLyrics || []), ...DATA.musicCloze];
+  const entry = musicPool[Math.floor(Math.random() * musicPool.length)];
+  const exerciseText = entry.text + (suppliedLyricExtensions[entry.song] || '');
+  const tagged = [...exerciseText.matchAll(/\{([^|{}]+)\|([^{}]+)\}/g)];
+  // User-supplied lyrics carry more targets; choose a changing subset each visit.
+  const blankCount = entry.supplied ? Math.min(10, tagged.length) : Math.min(1, tagged.length);
+  const blankWords = new Set(pickRandom(tagged.map(match => match[1]), blankCount));
+  let blankIndex = 0;
+  const answers = [];
+  const passage = exerciseText.replace(/\{([^|{}]+)\|([^{}]+)\}/g, (_, word, translation) => {
+    if (!blankWords.has(word)) return `<strong>${word}</strong>`;
+    const idx = blankIndex++;
+    answers.push(word);
+    return `<span style="display:inline-flex;flex-direction:column;vertical-align:middle;margin:0 .25rem">
+      <input class="conj-input" id="mcInput${idx}" style="width:150px" aria-label="${translation}" autocomplete="off">
+      <small style="color:var(--accent3);text-align:center">${translation}</small>
+    </span>`;
+  }).replace(/\n/g, '<br>');
+  mcState = {entry, answers, source, checked:false};
+  bumpPlayed();
+  openModal(`
+    <div class="modal-title">🎵 Spanish Music Cloze</div>
+    <div class="modal-subtitle"><strong>${entry.song}</strong> · ${entry.artist}</div>
+    <div class="story-text">${passage}</div>
+    <div class="hint-text">${entry.note}<br>${entry.supplied ? 'Lyrics supplied by the user.' : 'This is an original learning text, not the song’s lyrics.'} Supply the exact Spanish form required by the sentence.</div>
+    <div class="gap mt2" id="mcActions">
+      <button class="btn" onclick="mcCheck()">Check Answers</button>
+      <button class="btn secondary" onclick="launchMusicCloze('${source}')">Different Song</button>
+    </div>`);
+  setTimeout(() => document.getElementById('mcInput0')?.focus(), 50);
+}
+
+window.mcCheck = () => {
+  if (mcState.checked) return;
+  mcState.checked = true;
+  let correct = 0;
+  mcState.answers.forEach((answer, idx) => {
+    const input = document.getElementById(`mcInput${idx}`);
+    const isCorrect = normalizeSpanish(input.value) === normalizeSpanish(answer);
+    input.classList.add(isCorrect ? 'correct' : 'wrong');
+    if (isCorrect) correct++;
+    else {
+      const solution = document.createElement('small');
+      solution.style.color = 'var(--danger)';
+      solution.textContent = `Answer: ${answer}`;
+      input.parentElement.appendChild(solution);
+    }
+    input.disabled = true;
+  });
+  const pts = correct * 20;
+  addScore(pts);
+  addWordsLearned(correct);
+  if (correct === mcState.answers.length) incStreak(); else resetStreak();
+  document.getElementById('mcActions').innerHTML = `
+    <div class="score-display">${correct}/${mcState.answers.length} · +${pts} pts</div>
+    <button class="btn" onclick="launchMusicCloze('${mcState.source}')">Next Song</button>
+    <button class="btn secondary" onclick="closeModal()">Menu</button>`;
+};

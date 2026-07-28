@@ -1,6 +1,6 @@
 # 🇪🇸 VerbaMundo — Spanish Vocabulary Games
 
-An interactive website with **11 games** to help you master Spanish vocabulary — timed sprints, story comprehension, conjugation drills, and more.
+An interactive website with **15 games** to help you master Spanish vocabulary and explore the culture, geography, history, politics, and music of Spain.
 
 ## 🎮 Games
 
@@ -17,6 +17,10 @@ An interactive website with **11 games** to help you master Spanish vocabulary �
 | 9 | **Category Sort** | 📂 Classification | Sort verbs into the correct semantic category |
 | 10 | **Verb Sprint** | 🏃 Production | Type as many verb infinitives as you can in 90 seconds |
 | 11 | **True/False Blitz** | ✅ Judgment | Fast-fire correct/incorrect translation judgments |
+| 12 | **Pop Culture Spotlight** | 📺 Culture | Spanish television, film, presenters, actors, and famous programmes |
+| 13 | **Spain Explorer** | 🗺️ Geography | Cities, regions, rivers, islands, and landmarks |
+| 14 | **Politics & History** | 🏛️ Civics | Spanish institutions, political vocabulary, and major historical periods |
+| 15 | **Spanish Music Cloze** | 🎵 Music | Changing vocabulary and grammar blanks in original song-inspired learning passages |
 
 ## 🚀 Deploy to GitHub Pages
 
@@ -37,8 +41,9 @@ games.js     ← All 11 game engines
 
 - **Persistent score** saved in localStorage
 - **Streak tracking** across all games
-- **Words learned counter**
-- 150+ vocabulary items across multiple categories
+- **Cumulative correct-answer counter**
+- 450+ vocabulary items, including a 257-entry advanced gym module plus board-game and relationship conversation sets
+- Focused gym practice for equipment, facilities, anatomy and pain, exercises and programming, body positioning, and real conversations
 - 3 Latin American history stories with grammar exercises
 - Full verb conjugation tables (presente, pretérito, imperfecto, futuro)
 - Mobile responsive design
