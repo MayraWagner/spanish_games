@@ -4,27 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VerbaMundo — Master Spanish</title>
+  <link rel="icon" type="image/png" href="assets/verbamundo-cat-garden.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0e0e10;
-      --surface: #18181c;
-      --surface2: #22222a;
-      --border: #2e2e38;
-      --accent: #e8a838;
-      --accent2: #c8474a;
-      --accent3: #4a9e8a;
-      --text: #f0ede8;
-      --muted: #8a8898;
-      --success: #5cb85c;
-      --danger: #e05252;
+      --bg: #fff7f8;
+      --surface: #fffefe;
+      --surface2: #fce9ed;
+      --border: #efcbd3;
+      --accent: #d85f7f;
+      --accent2: #ed8ea5;
+      --accent3: #55866b;
+      --text: #4b3040;
+      --muted: #886c79;
+      --success: #4f9169;
+      --danger: #cf5269;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: var(--bg);
+      background:
+        radial-gradient(circle at 8% 12%, rgba(239, 163, 180, .20), transparent 25rem),
+        radial-gradient(circle at 92% 28%, rgba(112, 157, 124, .16), transparent 24rem),
+        linear-gradient(180deg, #fff9fa 0%, #fff4f7 48%, #fffaf7 100%);
       color: var(--text);
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
@@ -39,7 +43,9 @@
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
-      background: var(--bg);
+      background: rgba(255, 249, 250, .92);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 6px 25px rgba(109, 53, 74, .07);
       z-index: 100;
     }
     .logo {
@@ -47,6 +53,18 @@
       font-size: 1.5rem;
       color: var(--accent);
       letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+    }
+    .logo-mark {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      object-position: 63% 45%;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 4px 14px rgba(128, 65, 86, .18);
     }
     .logo span { color: var(--text); font-style: italic; }
     .nav-score {
@@ -61,10 +79,40 @@
 
     /* HERO */
     .hero {
-      text-align: center;
-      padding: 4rem 2rem 3rem;
-      max-width: 700px;
+      padding: 3rem 2rem 2.5rem;
+      max-width: 1180px;
       margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(360px, 1.1fr);
+      align-items: center;
+      gap: 3rem;
+    }
+    .hero-copy {
+      text-align: left;
+    }
+    .hero-art-wrap {
+      position: relative;
+    }
+    .hero-art {
+      width: 100%;
+      display: block;
+      border-radius: 34px;
+      border: 8px solid rgba(255,255,255,.8);
+      box-shadow: 0 22px 55px rgba(111, 59, 78, .18);
+      transform: rotate(1deg);
+    }
+    .plant-spark {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      font-size: 1.8rem;
+      box-shadow: 0 8px 20px rgba(75, 89, 67, .18);
+      left: -18px;
+      bottom: 22px;
     }
     .hero h1 {
       font-family: 'Playfair Display', serif;
@@ -82,11 +130,16 @@
     .stats-row {
       display: flex;
       gap: 2rem;
-      justify-content: center;
+      justify-content: flex-start;
       flex-wrap: wrap;
     }
     .stat {
       text-align: center;
+      background: rgba(255,255,255,.72);
+      border: 1px solid var(--border);
+      padding: .75rem 1rem;
+      border-radius: 18px;
+      min-width: 112px;
     }
     .stat-num {
       font-family: 'JetBrains Mono', monospace;
@@ -120,27 +173,29 @@
     .game-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 22px;
       padding: 1.5rem;
       cursor: pointer;
       width: 100%;
       color: inherit;
       font: inherit;
       text-align: left;
-      transition: border-color 0.2s, transform 0.15s, background 0.2s;
+      box-shadow: 0 8px 24px rgba(103, 54, 72, .07);
+      transition: border-color 0.2s, transform 0.15s, background 0.2s, box-shadow .2s;
       position: relative;
       overflow: hidden;
     }
     .game-card:hover {
       border-color: var(--accent);
-      transform: translateY(-2px);
+      transform: translateY(-5px) rotate(-.25deg);
       background: var(--surface2);
+      box-shadow: 0 15px 34px rgba(103, 54, 72, .14);
     }
     .game-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 3px;
+      height: 6px;
       background: var(--card-accent, var(--accent));
       opacity: 0;
       transition: opacity 0.2s;
@@ -179,7 +234,8 @@
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.85);
+      background: rgba(72, 40, 55, 0.58);
+      backdrop-filter: blur(8px);
       z-index: 200;
       display: flex;
       align-items: flex-start;
@@ -656,26 +712,65 @@
     }
     .lives-row { display: flex; gap: 0.35rem; font-size: 1.3rem; }
 
+    .modal {
+      border-radius: 28px;
+      box-shadow: 0 28px 80px rgba(58, 30, 43, .25);
+    }
+    .btn {
+      border-radius: 14px;
+      box-shadow: 0 5px 14px rgba(160, 70, 99, .16);
+    }
+    .choice-btn, .game-input, .conj-input {
+      border-radius: 14px;
+    }
+    .choice-btn:hover {
+      background: #fff2f5;
+    }
+
+    @media (max-width: 820px) {
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding-top: 2rem;
+      }
+      .hero-copy { text-align: center; }
+      .stats-row { justify-content: center; }
+      .hero-art-wrap { max-width: 620px; margin: 0 auto; }
+    }
+
     @media (max-width: 540px) {
       .choices-grid { grid-template-columns: 1fr; }
       .modal { padding: 1.25rem; }
+      nav { padding: .75rem 1rem; }
+      .logo { font-size: 1.2rem; }
+      .logo-mark { width: 38px; height: 38px; }
+      .nav-score { padding: .3rem .65rem; font-size: .72rem; }
+      .hero { padding-inline: 1rem; }
+      .hero-art { border-radius: 24px; border-width: 5px; }
+      .games-section { padding: 1rem; }
     }
   </style>
 </head>
 <body>
 
 <nav>
-  <div class="logo">Verba<span>Mundo</span></div>
+  <div class="logo"><img class="logo-mark" src="assets/verbamundo-cat-garden.png" alt="" />Verba<span>Mundo</span></div>
   <div class="nav-score" id="globalScore">⭐ 0 pts</div>
 </nav>
 
 <div class="hero">
-  <h1>Master <em>15,000</em> Spanish Verbs Through Play</h1>
-  <p>Fifteen interactive games built around real vocabulary, Spanish culture, geography, history, and music. Every round is different.</p>
-  <div class="stats-row">
-    <div class="stat"><span class="stat-num" id="statPlayed">0</span><span class="stat-label">Games Played</span></div>
-    <div class="stat"><span class="stat-num" id="statWords">0</span><span class="stat-label">Correct Answers</span></div>
-    <div class="stat"><span class="stat-num" id="statStreak">0</span><span class="stat-label">Best Streak</span></div>
+  <div class="hero-copy">
+    <h1>Learn Spanish with <em>curiosity</em> and play</h1>
+    <p>Fifteen friendly games for real vocabulary, Spanish culture, geography, history, music, and everyday conversation. Pick a cozy corner and start playing.</p>
+    <div class="stats-row">
+      <div class="stat"><span class="stat-num" id="statPlayed">0</span><span class="stat-label">Games Played</span></div>
+      <div class="stat"><span class="stat-num" id="statWords">0</span><span class="stat-label">Correct Answers</span></div>
+      <div class="stat"><span class="stat-num" id="statStreak">0</span><span class="stat-label">Best Streak</span></div>
+    </div>
+  </div>
+  <div class="hero-art-wrap">
+    <img class="hero-art" src="assets/verbamundo-cat-garden.png" alt="A cheerful cat studying Spanish among green houseplants" />
+    <div class="plant-spark" aria-hidden="true">🌿</div>
   </div>
 </div>
 
